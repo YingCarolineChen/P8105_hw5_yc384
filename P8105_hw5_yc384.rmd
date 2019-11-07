@@ -32,7 +32,7 @@ set.seed(10)
 
 ```
 
-##Problem 1: The purpose of this problem is to fill in those missing values. 
+## Problem 1: The purpose of this problem is to fill in those missing values. 
 
 * For numeric variables, replace missingness with the mean of non-missing values
 * For character variables, fill in missing values with "virginica"
@@ -59,5 +59,53 @@ iris_missingreplaced = function(m) {
 
 output = map_df(iris_with_missing, iris_missingreplaced)
 output %>%
-  view()
+head(10) 
+
 ```
+
+
+## Problem 2: Create a tidy dataframe containing all subject ID, arm, and observations over time and make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
+
+```{r}
+## List all file names
+files = list.files("./data", full.names = TRUE)
+
+## Import data
+data = map_df(files, read_csv)
+
+## tidy
+df = 
+  data_frame(files) %>% 
+  bind_cols(data) %>% 
+  mutate(arm = substr(files, 8, 10),
+         subject_ID = substr(files, 12, 13)) %>% 
+  pivot_longer(week_1:week_8,
+               names_to = "week",
+               values_to = "obs") %>% 
+  select(-files)
+
+
+## making a spaghetti plot
+plot1 = 
+  df %>% 
+  ggplot(aes(x = week, y = obs, group = subject_ID, color = arm)) +
+  geom_line() + 
+  stat_smooth(
+    aes(group = 1),
+    method = "lm"
+    ) +
+  labs(title = "Observations over Time for Each Subject",
+       x = "Time in Weeks",
+       y = "Observations") + 
+  theme(legend.position = "none",  
+        axis.text.x = element_text(hjust = 0.8, vjust = 0.5,                  
+                       size = 6, angle = 25
+        )) +
+  facet_grid(. ~arm) 
+
+plot1
+
+```
+
+**Comment:** From the spaghetti plot, we can see that the weekly observation for the experiment group increases as time increases; while the control arm decreased slightly overtime. Differenc in observation values between control and experiment groups increases overtime. The minimum value for the experiment group at week 8 is greater than the maximum value of the control group, which indicates the oberseved value at week 8 differs significantly. 
+
